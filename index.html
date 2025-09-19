@@ -1,134 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Mileage Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-    h1 { color: #004d66; }
-    label { display: block; margin-top: 10px; }
-    input { padding: 5px; width: 100%; max-width: 200px; }
-    button { margin-top: 10px; padding: 8px 12px; border: none; background: #008080; color: white; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #006666; }
-    #log { margin-top: 20px; padding: 0; list-style: none; }
-    #log li { background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .total { font-weight: bold; margin-top: 15px; }
-    .incomplete { color: #cc0000; font-style: italic; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mileage Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
 </head>
-<body>
-  <h1>📊 Mileage Tracker</h1>
+<body class="bg-gray-100 p-4 sm:p-8 flex items-center justify-center min-h-screen">
 
-  <label>Start Odometer:
-    <input type="number" id="start" placeholder="Morning reading">
-  </label>
-  <button onclick="saveStart()">🌅 Save Start</button>
+    <!-- Main Container -->
+    <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-lg space-y-6">
+        <h1 class="text-3xl font-bold text-center text-gray-800 flex items-center justify-center space-x-2">
+            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>Mileage Tracker</span>
+        </h1>
 
-  <label>End Odometer:
-    <input type="number" id="end" placeholder="Evening reading">
-  </label>
-  <button onclick="saveEnd()">🌇 Save End</button>
+        <!-- Form Section -->
+        <div class="space-y-4">
+            <div>
+                <label for="startOdometer" class="block text-sm font-medium text-gray-700">Start Odometer</label>
+                <input type="number" id="startOdometer" placeholder="Morning reading" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out p-2.5">
+                <button onclick="saveOdometer('start')" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-full transition-colors duration-200 ease-in-out">
+                    Save Start
+                </button>
+            </div>
+            <div>
+                <label for="endOdometer" class="block text-sm font-medium text-gray-700">End Odometer</label>
+                <input type="number" id="endOdometer" placeholder="Evening reading" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out p-2.5">
+                <button onclick="saveOdometer('end')" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-full transition-colors duration-200 ease-in-out">
+                    Save End
+                </button>
+            </div>
+        </div>
 
-  <br><br>
-  <button onclick="exportCSV()">📤 Export CSV</button>
-  <button onclick="clearData()">🗑️ Clear All</button>
+        <!-- Log and Totals Section -->
+        <div class="space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800">Weekly Log</h2>
+            <ul id="logList" class="space-y-2 text-gray-700">
+                <!-- Log entries will be inserted here by JavaScript -->
+            </ul>
+            <div class="text-lg font-semibold text-gray-800 mt-4 pt-4 border-t border-gray-200">
+                Total Miles This Week: <span id="totalMiles">0</span>
+            </div>
+        </div>
 
-  <h2>Weekly Log</h2>
-  <ul id="log"></ul>
-  <div class="total" id="total"></div>
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4 border-t border-gray-200">
+            <button onclick="exportCSV()" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2.5 px-6 rounded-full transition-colors duration-200 ease-in-out flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>Export CSV</span>
+            </button>
+            <button onclick="confirmClearAll()" class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-6 rounded-full transition-colors duration-200 ease-in-out flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <span>Clear All</span>
+            </button>
+        </div>
+    </div>
 
-<script>
-  let mileageData = JSON.parse(localStorage.getItem("mileageData") || "[]");
-  let pendingEntry = JSON.parse(localStorage.getItem("pendingEntry") || "null");
+    <!-- Message box for user feedback -->
+    <div id="messageBox" class="fixed inset-x-0 bottom-4 w-11/12 max-w-sm mx-auto p-4 bg-gray-800 text-white text-center rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50"></div>
+    <div id="confirmBox" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-80 text-center">
+            <p class="mb-4 text-gray-800">Are you sure you want to clear all data?</p>
+            <div class="flex justify-center space-x-4">
+                <button onclick="clearAll(true)" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-full">Yes, Clear</button>
+                <button onclick="clearAll(false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-full">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-  renderLog();
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLog();
+        });
 
-  function saveStart() {
-    const start = parseFloat(document.getElementById("start").value);
-    if (isNaN(start)) {
-      alert("⚠️ Please enter a valid start odometer reading.");
-      return;
-    }
-    pendingEntry = {
-      date: new Date().toLocaleDateString(),
-      start: start
-    };
-    localStorage.setItem("pendingEntry", JSON.stringify(pendingEntry));
-    document.getElementById("start").value = "";
-    renderLog();
-  }
+        function showMessage(message, duration = 3000) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.style.opacity = '1';
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+            }, duration);
+        }
 
-  function saveEnd() {
-    const end = parseFloat(document.getElementById("end").value);
-    if (!pendingEntry) {
-      alert("⚠️ No start odometer saved. Enter start in the morning first.");
-      return;
-    }
-    if (isNaN(end) || end < pendingEntry.start) {
-      alert("⚠️ Please enter a valid end odometer reading (must be greater than start).");
-      return;
-    }
-    const miles = end - pendingEntry.start;
-    const entry = {
-      date: pendingEntry.date,
-      start: pendingEntry.start,
-      end: end,
-      miles
-    };
-    mileageData.push(entry);
-    localStorage.setItem("mileageData", JSON.stringify(mileageData));
-    pendingEntry = null;
-    localStorage.removeItem("pendingEntry");
-    document.getElementById("end").value = "";
-    renderLog();
-  }
+        function confirmClearAll() {
+            document.getElementById('confirmBox').classList.remove('hidden');
+        }
 
-  function renderLog() {
-    const list = document.getElementById("log");
-    list.innerHTML = "";
-    let totalMiles = 0;
-    mileageData.forEach(e => {
-      totalMiles += e.miles;
-      const li = document.createElement("li");
-      li.textContent = `${e.date}: ${e.start} → ${e.end} = ${e.miles} miles`;
-      list.appendChild(li);
-    });
-    if (pendingEntry) {
-      const li = document.createElement("li");
-      li.innerHTML = `${pendingEntry.date}: Start = ${pendingEntry.start} <span class="incomplete">(waiting for end odometer)</span>`;
-      list.appendChild(li);
-    }
-    document.getElementById("total").textContent =
-      `Total Miles This Week: ${totalMiles}`;
-  }
+        function clearAll(confirmed) {
+            document.getElementById('confirmBox').classList.add('hidden');
+            if (confirmed) {
+                localStorage.removeItem('mileageLog');
+                updateLog();
+                showMessage("All data has been cleared!");
+            }
+        }
 
-  function exportCSV() {
-    if (mileageData.length === 0) {
-      alert("No mileage data to export.");
-      return;
-    }
-    let csv = "Date,Start,End,Miles\n";
-    mileageData.forEach(e => {
-      csv += `${e.date},${e.start},${e.end},${e.miles}\n`;
-    });
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "mileage_log.csv";
-    a.click();
-  }
+        function saveOdometer(type) {
+            const startInput = document.getElementById('startOdometer');
+            const endInput = document.getElementById('endOdometer');
+            let log = JSON.parse(localStorage.getItem('mileageLog')) || [];
 
-  function clearData() {
-    if (confirm("Are you sure you want to clear all mileage data?")) {
-      mileageData = [];
-      pendingEntry = null;
-      localStorage.removeItem("mileageData");
-      localStorage.removeItem("pendingEntry");
-      renderLog();
-    }
-  }
-</script>
+            if (type === 'start') {
+                const reading = parseFloat(startInput.value);
+                if (isNaN(reading)) {
+                    showMessage("Please enter a valid start odometer reading.");
+                    return;
+                }
+                
+                const today = new Date().toLocaleDateString('en-US');
+                const existingEntryIndex = log.findIndex(entry => entry.date === today);
+
+                if (existingEntryIndex !== -1) {
+                    log[existingEntryIndex].start = reading;
+                    showMessage("Updated today's start reading!");
+                } else {
+                    log.push({
+                        date: today,
+                        start: reading,
+                        end: null,
+                        miles: 0
+                    });
+                    showMessage("Start reading saved!");
+                }
+                startInput.value = '';
+
+            } else if (type === 'end') {
+                const reading = parseFloat(endInput.value);
+                if (isNaN(reading)) {
+                    showMessage("Please enter a valid end odometer reading.");
+                    return;
+                }
+                
+                const today = new Date().toLocaleDateString('en-US');
+                const existingEntryIndex = log.findIndex(entry => entry.date === today);
+
+                if (existingEntryIndex !== -1 && log[existingEntryIndex].start !== null) {
+                    log[existingEntryIndex].end = reading;
+                    log[existingEntryIndex].miles = reading - log[existingEntryIndex].start;
+                    showMessage("End reading saved!");
+                } else {
+                    showMessage("Please save a start reading for today first.");
+                    return;
+                }
+                endInput.value = '';
+            }
+
+            localStorage.setItem('mileageLog', JSON.stringify(log));
+            updateLog();
+        }
+
+        function updateLog() {
+            const logList = document.getElementById('logList');
+            const totalMilesElement = document.getElementById('totalMiles');
+            const log = JSON.parse(localStorage.getItem('mileageLog')) || [];
+            
+            logList.innerHTML = '';
+            let totalMiles = 0;
+
+            log.forEach(entry => {
+                const listItem = document.createElement('li');
+                listItem.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm";
+                
+                let logText = `${entry.date}: ${entry.start || 'N/A'} → ${entry.end || 'N/A'}`;
+                let milesText = '';
+
+                if (entry.start !== null && entry.end !== null) {
+                    milesText = ` = ${entry.miles.toFixed(2)} miles`;
+                    totalMiles += entry.miles;
+                }
+                
+                listItem.innerHTML = `
+                    <span class="font-medium text-gray-700">${logText}</span>
+                    <span class="font-semibold text-blue-600">${milesText}</span>
+                `;
+                logList.appendChild(listItem);
+            });
+
+            totalMilesElement.textContent = totalMiles.toFixed(2);
+        }
+
+        function loadLog() {
+            updateLog();
+        }
+
+        function exportCSV() {
+            const log = JSON.parse(localStorage.getItem('mileageLog')) || [];
+            if (log.length === 0) {
+                showMessage("No data to export!");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Start Odometer,End Odometer,Miles\n";
+
+            log.forEach(entry => {
+                const row = `${entry.date},${entry.start || ''},${entry.end || ''},${entry.miles || ''}\n`;
+                csvContent += row;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "mileage_log.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showMessage("Exporting data...");
+        }
+    </script>
 </body>
 </html>
