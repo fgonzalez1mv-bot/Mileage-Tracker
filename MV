@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mileage Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    h1 { color: #004d66; }
+    label { display: block; margin-top: 10px; }
+    input { padding: 5px; width: 100%; max-width: 200px; }
+    button { margin-top: 10px; padding: 8px 12px; border: none; background: #008080; color: white; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #006666; }
+    #log { margin-top: 20px; padding: 0; list-style: none; }
+    #log li { background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .total { font-weight: bold; margin-top: 15px; }
+    .incomplete { color: #cc0000; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>📊 Mileage Tracker</h1>
+
+  <label>Start Odometer:
+    <input type="number" id="start" placeholder="Morning reading">
+  </label>
+  <button onclick="saveStart()">🌅 Save Start</button>
+
+  <label>End Odometer:
+    <input type="number" id="end" placeholder="Evening reading">
+  </label>
+  <button onclick="saveEnd()">🌇 Save End</button>
+
+  <br><br>
+  <button onclick="exportCSV()">📤 Export CSV</button>
+  <button onclick="clearData()">🗑️ Clear All</button>
+
+  <h2>Weekly Log</h2>
+  <ul id="log"></ul>
+  <div class="total" id="total"></div>
+
+<script>
+  let mileageData = JSON.parse(localStorage.getItem("mileageData") || "[]");
+  let pendingEntry = JSON.parse(localStorage.getItem("pendingEntry") || "null");
+
+  renderLog();
+
+  function saveStart() {
+    const start = parseFloat(document.getElementById("start").value);
+    if (isNaN(start)) {
+      alert("⚠️ Please enter a valid start odometer reading.");
+      return;
+    }
+    pendingEntry = {
+      date: new Date().toLocaleDateString(),
+      start: start
+    };
+    localStorage.setItem("pendingEntry", JSON.stringify(pendingEntry));
+    document.getElementById("start").value = "";
+    renderLog();
+  }
+
+  function saveEnd() {
+    const end = parseFloat(document.getElementById("end").value);
+    if (!pendingEntry) {
+      alert("⚠️ No start odometer saved. Enter start in the morning first.");
+      return;
+    }
+    if (isNaN(end) || end < pendingEntry.start) {
+      alert("⚠️ Please enter a valid end odometer reading (must be greater than start).");
+      return;
+    }
+    const miles = end - pendingEntry.start;
+    const entry = {
+      date: pendingEntry.date,
+      start: pendingEntry.start,
+      end: end,
+      miles
+    };
+    mileageData.push(entry);
+    localStorage.setItem("mileageData", JSON.stringify(mileageData));
+    pendingEntry = null;
+    localStorage.removeItem("pendingEntry");
+    document.getElementById("end").value = "";
+    renderLog();
+  }
+
+  function renderLog() {
+    const list = document.getElementById("log");
+    list.innerHTML = "";
+    let totalMiles = 0;
+    mileageData.forEach(e => {
+      totalMiles += e.miles;
+      const li = document.createElement("li");
+      li.textContent = `${e.date}: ${e.start} → ${e.end} = ${e.miles} miles`;
+      list.appendChild(li);
+    });
+    if (pendingEntry) {
+      const li = document.createElement("li");
+      li.innerHTML = `${pendingEntry.date}: Start = ${pendingEntry.start} <span class="incomplete">(waiting for end odometer)</span>`;
+      list.appendChild(li);
+    }
+    document.getElementById("total").textContent =
+      `Total Miles This Week: ${totalMiles}`;
+  }
+
+  function exportCSV() {
+    if (mileageData.length === 0) {
+      alert("No mileage data to export.");
+      return;
+    }
+    let csv = "Date,Start,End,Miles\n";
+    mileageData.forEach(e => {
+      csv += `${e.date},${e.start},${e.end},${e.miles}\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mileage_log.csv";
+    a.click();
+  }
+
+  function clearData() {
+    if (confirm("Are you sure you want to clear all mileage data?")) {
+      mileageData = [];
+      pendingEntry = null;
+      localStorage.removeItem("mileageData");
+      localStorage.removeItem("pendingEntry");
+      renderLog();
+    }
+  }
+</script>
+</body>
+</html>
