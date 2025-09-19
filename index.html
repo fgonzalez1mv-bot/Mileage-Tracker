@@ -40,6 +40,26 @@
                     Save End
                 </button>
             </div>
+            <div>
+                <label for="destination" class="block text-sm font-medium text-gray-700">Destination</label>
+                <input type="text" id="destination" placeholder="e.g., Office, Home" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out p-2.5">
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-2">
+                <button onclick="saveLocation('start')" class="w-full sm:w-1/2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-full transition-colors duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M5.055 7.042A4 4 0 0113 7a4 4 0 01-1.055 2.958L10 12.844l-1.945-2.802A4 4 0 015.055 7.042zM10 5a2 2 0 100 4 2 2 0 000-4z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M.458 10C1.408 5.759 5.86 3.5 10 3.5s8.592 2.259 9.542 6.501c-.95.45-3.085 1.543-5.542 2.766-1.432.716-2.592 1.547-3.996 2.502a1 1 0 01-1.411 0c-1.404-.955-2.564-1.786-3.996-2.502C3.542 11.543 1.408 10.45 0.458 10zM10 14.5a.5.5 0 01-.5-.5V9.05a.5.5 0 011 0v4.95a.5.5 0 01-.5.5z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Record Start Location</span>
+                </button>
+                <button onclick="saveLocation('end')" class="w-full sm:w-1/2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 px-4 rounded-full transition-colors duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M5.055 7.042A4 4 0 0113 7a4 4 0 01-1.055 2.958L10 12.844l-1.945-2.802A4 4 0 015.055 7.042zM10 5a2 2 0 100 4 2 2 0 000-4z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M.458 10C1.408 5.759 5.86 3.5 10 3.5s8.592 2.259 9.542 6.501c-.95.45-3.085 1.543-5.542 2.766-1.432.716-2.592 1.547-3.996 2.502a1 1 0 01-1.411 0c-1.404-.955-2.564-1.786-3.996-2.502C3.542 11.543 1.408 10.45 0.458 10zM10 14.5a.5.5 0 01-.5-.5V9.05a.5.5 0 011 0v4.95a.5.5 0 01-.5.5z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Record End Location</span>
+                </button>
+            </div>
         </div>
 
         <!-- Log and Totals Section -->
@@ -105,10 +125,71 @@
             }
         }
 
+        function saveLocation(type) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        let log = JSON.parse(localStorage.getItem('mileageLog')) || [];
+                        const today = new Date().toLocaleDateString('en-US');
+                        const location = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                        
+                        let existingEntryIndex = log.findIndex(entry => entry.date === today);
+                        
+                        if (existingEntryIndex === -1) {
+                            existingEntryIndex = log.length;
+                            log.push({
+                                date: today,
+                                start: null,
+                                end: null,
+                                miles: 0,
+                                destination: '',
+                                startLocation: null,
+                                endLocation: null
+                            });
+                        }
+
+                        if (type === 'start') {
+                            log[existingEntryIndex].startLocation = location;
+                            showMessage("Start location recorded!");
+                        } else {
+                            log[existingEntryIndex].endLocation = location;
+                            showMessage("End location recorded!");
+                        }
+
+                        localStorage.setItem('mileageLog', JSON.stringify(log));
+                        updateLog();
+                    },
+                    (error) => {
+                        showMessage("Error getting location: " + error.message);
+                    }
+                );
+            } else {
+                showMessage("Geolocation is not supported by your browser.");
+            }
+        }
+
         function saveOdometer(type) {
             const startInput = document.getElementById('startOdometer');
             const endInput = document.getElementById('endOdometer');
+            const destinationInput = document.getElementById('destination');
             let log = JSON.parse(localStorage.getItem('mileageLog')) || [];
+
+            const today = new Date().toLocaleDateString('en-US');
+            let existingEntryIndex = log.findIndex(entry => entry.date === today);
+
+            if (existingEntryIndex === -1) {
+                existingEntryIndex = log.length;
+                log.push({
+                    date: today,
+                    start: null,
+                    end: null,
+                    miles: 0,
+                    destination: '',
+                    startLocation: null,
+                    endLocation: null
+                });
+            }
 
             if (type === 'start') {
                 const reading = parseFloat(startInput.value);
@@ -116,22 +197,11 @@
                     showMessage("Please enter a valid start odometer reading.");
                     return;
                 }
-                
-                const today = new Date().toLocaleDateString('en-US');
-                const existingEntryIndex = log.findIndex(entry => entry.date === today);
-
-                if (existingEntryIndex !== -1) {
-                    log[existingEntryIndex].start = reading;
-                    showMessage("Updated today's start reading!");
-                } else {
-                    log.push({
-                        date: today,
-                        start: reading,
-                        end: null,
-                        miles: 0
-                    });
-                    showMessage("Start reading saved!");
+                log[existingEntryIndex].start = reading;
+                if (destinationInput.value) {
+                    log[existingEntryIndex].destination = destinationInput.value;
                 }
+                showMessage("Start reading saved!");
                 startInput.value = '';
 
             } else if (type === 'end') {
@@ -140,18 +210,16 @@
                     showMessage("Please enter a valid end odometer reading.");
                     return;
                 }
-                
-                const today = new Date().toLocaleDateString('en-US');
-                const existingEntryIndex = log.findIndex(entry => entry.date === today);
-
-                if (existingEntryIndex !== -1 && log[existingEntryIndex].start !== null) {
-                    log[existingEntryIndex].end = reading;
-                    log[existingEntryIndex].miles = reading - log[existingEntryIndex].start;
-                    showMessage("End reading saved!");
-                } else {
+                if (log[existingEntryIndex].start === null) {
                     showMessage("Please save a start reading for today first.");
                     return;
                 }
+                log[existingEntryIndex].end = reading;
+                log[existingEntryIndex].miles = reading - log[existingEntryIndex].start;
+                if (destinationInput.value) {
+                    log[existingEntryIndex].destination = destinationInput.value;
+                }
+                showMessage("End reading saved!");
                 endInput.value = '';
             }
 
@@ -169,19 +237,26 @@
 
             log.forEach(entry => {
                 const listItem = document.createElement('li');
-                listItem.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm";
+                listItem.className = "flex flex-col p-3 bg-gray-50 rounded-lg shadow-sm";
                 
-                let logText = `${entry.date}: ${entry.start || 'N/A'} → ${entry.end || 'N/A'}`;
-                let milesText = '';
-
-                if (entry.start !== null && entry.end !== null) {
-                    milesText = ` = ${entry.miles.toFixed(2)} miles`;
-                    totalMiles += entry.miles;
+                let startText = entry.start !== null ? `${entry.start}` : 'N/A';
+                let endText = entry.end !== null ? `${entry.end}` : 'N/A';
+                let milesText = entry.miles !== 0 ? ` = ${entry.miles.toFixed(2)} miles` : '';
+                
+                let locationText = '';
+                if (entry.startLocation || entry.endLocation) {
+                    locationText += `<span class="text-sm text-gray-500 mt-1">Start: ${entry.startLocation || 'N/A'} | End: ${entry.endLocation || 'N/A'}</span>`;
                 }
+
+                totalMiles += entry.miles;
                 
                 listItem.innerHTML = `
-                    <span class="font-medium text-gray-700">${logText}</span>
-                    <span class="font-semibold text-blue-600">${milesText}</span>
+                    <div class="flex justify-between items-center w-full">
+                        <span class="font-medium text-gray-700">${entry.date}: ${startText} &rarr; ${endText}</span>
+                        <span class="font-semibold text-blue-600">${milesText}</span>
+                    </div>
+                    ${entry.destination ? `<span class="text-sm text-gray-500 mt-1">Destination: ${entry.destination}</span>` : ''}
+                    ${locationText}
                 `;
                 logList.appendChild(listItem);
             });
@@ -201,10 +276,10 @@
             }
 
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Date,Start Odometer,End Odometer,Miles\n";
+            csvContent += "Date,Start Odometer,End Odometer,Miles,Destination,Start Location,End Location\n";
 
             log.forEach(entry => {
-                const row = `${entry.date},${entry.start || ''},${entry.end || ''},${entry.miles || ''}\n`;
+                const row = `${entry.date},${entry.start || ''},${entry.end || ''},${entry.miles || ''},"${entry.destination || ''}","${entry.startLocation || ''}","${entry.endLocation || ''}"\n`;
                 csvContent += row;
             });
 
